@@ -1,0 +1,18 @@
+{
+ "type": "ecmascript",
+  "id": "stalker",
+  "file": "stalker.js",
+  "category": "tv",
+  "showtimeVersion": "0.0.1",
+  "version": "0.0.1",
+  "author": "LuckXiang (@luckxiang)",
+  "title": "Stalker",
+  "icon": "stalker.bmp",
+  "synopsis": "stalker for test",
+  "description":"<p>just for test stalker api.</p>",
+  "homepage":"https://github.com/luckxiang",
+  "setting":{
+    "url": "",
+    "mac": "00:1A:79:f5:75:d2"
+    }
+}
