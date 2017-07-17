@@ -2,19 +2,13 @@
 
 var http = require('showtime/http');
 var fs = require('showtime/fs');
-var url = 'http://192.168.110.133:88';
-//var url = 'http://mag.iformula.ru';
-//var url = 'http://mag.iptv.so';
-//var url = 'http://dgold.noip.me';
+var url = ' ';
 var server_url = '/stalker_portal';
 var	load = '/server/load.php';
 var refer = '/c/';
 var user_agent  = 'Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 4 rev: 1812 Mobile Safari/533.3';
 var timezone = 'America%2FChicago';
-//var mac = 'c4:34:6b:49:7f:a8';
-//var mac = '00:1A:79:59:70:a8';
 var mac = '00:1A:79:f5:75:d2';
-//var mac = 'c4:34:6b:49:7f:a7';
 var token;
 var global_responseData;
 
@@ -26,7 +20,10 @@ var global_responseData;
     {
         if(cfg_data[i].status == "enable")
         {
-            url = "http://" + cfg_data[i].url;
+            if(cfg_data[i].url.substring(0, 7) == "http://")
+                url = cfg_data[i].url;
+            else
+                url = "http://" + cfg_data[i].url;
             mac = cfg_data[i].mac;
             break;
         }
@@ -37,8 +34,6 @@ var global_responseData;
     plugin.addURI(PLUGIN_PREFIX+"start", function(page) {
         page.type = "directory";
 
-       // fs.writeFileSync("/media/sda1/test.txt", "hello\n", null);
- //       print(fs.readFileSync("/media/sda1/test.txt"));
         token = handshake();
         responseData = get_genres(token);
         global_responseData = get_all_channels(token);
@@ -74,7 +69,8 @@ var global_responseData;
 
         var videoParams = {
         sources: [{
-                url: url,
+                //url: url,
+            url: "http://185.38.12.34/sec/1500302457/35303932e1e553d976128faa12d15bfcd6d26363bcfd6180/ivs/41/29/416af14d1ae1.mp4/hls/tracks-3,4/index.m3u8",
           }],
         no_subtitle_scan: true,
         subtitles: []
