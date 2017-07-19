@@ -70,7 +70,7 @@ var global_responseData;
         var videoParams = {
         sources: [{
                 //url: url,
-            url: "http://185.38.12.34/sec/1500302457/35303932e1e553d976128faa12d15bfcd6d26363bcfd6180/ivs/41/29/416af14d1ae1.mp4/hls/tracks-3,4/index.m3u8",
+            url: "http://v.cctv.com/flash//jingjibanxiaoshi/2008/09/jingjibanxiaoshi_300_20080919_1.flv",
           }],
         no_subtitle_scan: true,
         subtitles: []
