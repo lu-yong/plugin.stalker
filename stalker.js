@@ -3,14 +3,19 @@
 var http = require('showtime/http');
 var fs = require('showtime/fs');
 var url = ' ';
-var server_url = '/stalker_portal';
-var	load = '/server/load.php';
+var	load_url = '';
+var	load_url1 = '/portal.php';
+var	load_url2 = '/stalker_portal/server/load.php';
 var refer = '/c/';
 var user_agent  = 'Mozilla/5.0 (QtEmbedded; U; Linux; C) AppleWebKit/533.3 (KHTML, like Gecko) MAG200 stbapp ver: 4 rev: 1812 Mobile Safari/533.3';
-var timezone = 'America%2FChicago';
+var timezone = 'Europe%2FUzhgorod';
+var ver_str = '&ver=ImageDescription:%200.2.18-r11-250;%20ImageDate:%20Wed%20Mar%2018%2017:54:59%20EET%202015;%20PORTAL%20version:%204.9.22;%20API%20Version:%20JS%20API%20version:%20331;%20STB%20API%20version:%20141;%20Player%20Engine%20version:%200x572';
 var mac = '00:1A:79:f5:75:d2';
+var mac_id = '001A79f575d2';
 var token;
 var global_responseData;
+var global_get_ok;
+var server_type = 0;
 
 (function(plugin) {
     var PLUGIN_PREFIX = "stalker:";
@@ -25,6 +30,7 @@ var global_responseData;
             else
                 url = "http://" + cfg_data[i].url;
             mac = cfg_data[i].mac;
+            mac_id = mac.replace(/\:+/g,"");
             break;
         }
     }
@@ -36,28 +42,77 @@ var global_responseData;
 
         token = handshake();
         responseData = get_genres(token);
-        global_responseData = get_all_channels(token);
         responseData = responseData.js;
         for(var i in responseData)
         {
-            page.appendItem(PLUGIN_PREFIX + 'id:' + responseData[i].id + ':alias:' + responseData[i].alias, 'directory',{title: responseData[i].title,ext_id:"hello, i`am extra data" });
+            page.appendItem(PLUGIN_PREFIX + 'id:' + responseData[i].id + ':alias:' + responseData[i].alias, 'directory',{title: responseData[i].title,extra_data:"hello, i`am extra data" });
         }
+        global_get_ok = 0;
         page.loading = false;
 
     });
 
     plugin.addURI(PLUGIN_PREFIX+"id:(.*):alias:(.*)", function(page, id, alias) {
+        var offset = 0;
+        var j = 0;
+        var total = 0;
+        page.entries = 0;
+        if(global_get_ok == 0)
+        {
+            global_get_ok = 1;
+            global_responseData = get_all_channels(token);
+        }
+
         for(var i in global_responseData)
         {
             if(global_responseData[i].tv_genre_id == id || alias.toLowerCase() == 'all')
-                page.appendItem(PLUGIN_PREFIX + 'playcmd:' + global_responseData[i].cmd, 'video',{title: global_responseData[i].name, icon: url + '/stalker_portal/misc/logos/320/' + global_responseData[i].logo});
+            {
+                total++;
+            }
         }
+
+        function loader() {
+            j = 0;
+        for(var i in global_responseData)
+        {
+            if(global_responseData[i].tv_genre_id == id || alias.toLowerCase() == 'all')
+            {
+                j++;
+                if(j <= offset)
+                    continue;
+                if(j > offset +50)
+                    break;
+				if(global_responseData[i].logo)
+				{
+					if(global_responseData[i].logo.substring(0,4) == "http")
+						icon_url = global_responseData[i].logo;
+					else
+						icon_url = url + '/stalker_portal/misc/logos/320/' + global_responseData[i].logo;
+				}
+				else
+				{
+					icon_url = '';
+				}
+                page.appendItem(PLUGIN_PREFIX + 'playcmd:' + global_responseData[i].cmd, 'video',{title: global_responseData[i].name, icon: icon_url,extra_data:"total:"+total});
+            }
+        }
+        offset +=50;
+        print("offset:"+offset+"page.entries:"+page.entries);
+        }
+        loader();
+        page.paginator = loader;
+
     });
 
     plugin.addURI(PLUGIN_PREFIX+"playcmd:(.*)", function(page, cmd) {
         var url;
-        if(cmd.substring(0, 7) == "http://")
+        print(cmd);
+        if(cmd.substring(0, 4) == "http")
             url = cmd;
+        else if(cmd.substring(0, 6) == "ffmpeg") //&& cmd.substring(7, 11) == "http")
+        {
+            url = cmd.split(' ')[1];
+        }
         else
         {
             token = handshake();
@@ -69,8 +124,7 @@ var global_responseData;
 
         var videoParams = {
         sources: [{
-                //url: url,
-            url: "http://v.cctv.com/flash//jingjibanxiaoshi/2008/09/jingjibanxiaoshi_300_20080919_1.flv",
+                url: url,
           }],
         no_subtitle_scan: true,
         subtitles: []
@@ -80,65 +134,119 @@ var global_responseData;
 
 })(this);
 
+function handshake1(){
+	//print('handshake1');
+	var responseText = '';
+    var param = '?type=stb&action=handshake&JsHttpRequest=1-xml';
+	try{
+        var responseText = showtime.httpReq(url + load_url1 + param, {
+                headers: {
+			        'User-Agent' : user_agent,
+			        'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
+			        'Connection' : 'Keep-Alive',
+			        'X-User-Agent' : 'MAG250; Link: Ethernet',
+			        'Host': 'p4.iptvprivateserver.tv',
+                },
+            }).toString();
+        if(responseText.length>10)
+        {
+            //print("handshake1:" + responseText);
+		    load_url = load_url1;
+		    server_type = 1;
+        }
+    }catch(error){
+        print('handshake1 failed');
+    }
+    return responseText;
+}
+
+function handshake2(){
+	//print('handshake2');
+	var responseText = '';
+    var param = '?type=stb&action=handshake&JsHttpRequest=1-xml';
+	try{
+        var responseText = showtime.httpReq(url + load_url2 + param, {
+                headers: {
+			        'User-Agent' : user_agent,
+			        'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
+			        'Connection' : 'Keep-Alive',
+			        'X-User-Agent' : 'MAG250; Link: Ethernet',
+			        'Host': 'p4.iptvprivateserver.tv',
+                },
+            }).toString();
+        if(responseText.length>10)
+        {
+            //print("handshake2:" + responseText);
+		    load_url = load_url2;
+		    server_type = 2;
+        }
+    }catch(error){
+        print('handshake2 failed');
+    }
+    return responseText;
+}
+
 function handshake(){
-    var postdata = 'action=handshake&type=stb&JsHttpRequest=1-xml';
-    var responseText = http.request(url + server_url + load, {
-            headers: {
-			    'User-Agent' : user_agent,
-			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Referer' : url + server_url + refer,
-			    'Accept' : '*/*',
-			    'Connection' : 'close',
-			    'X-User-Agent' : 'Model: MAG254; Link: Ethernet',
-                'Accept-Encoding': 'identity',
-                'Content-Length': postdata.length,
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            postdata: postdata
-        }).toString();
+    var responseText = '';
+    if((server_type == 0)||(server_type == 1))
+    {
+        responseText = handshake1();
+    }
+    if((server_type == 0)||(server_type == 2))
+    {
+        responseText = handshake2();
+    }
     var token = JSON.parse(responseText).js.token;
     get_profile(token);
+    get_modules(token);
     return token;
 }
 
 function get_profile(token){
-    var postdata = 'stb_type=MAG254&num_banks=1&JsHttpRequest=1-xml&hw_version=2.6-IB-00&hd=1&not_valid_token=0&image_version=218&ver=ImageDescription%3A%25200.2.18-r11-pub-254%3B%2520ImageDate%3A%2520Wed%2520Mar%252018%252018%3A09%3A40%2520EET%25202015%3B%2520PORTAL%2520version%3A%25204.9.14%3B%2520API%2520Version%3A%2520JS%2520API%2520version%3A%2520331%3B%2520STB%2520API%2520version%3A%2520141%3B%2520Player%2520Engine%2520version%3A%25200x572&auth_second_step=0&action=get_profile&type=stb';
-    var responseText = http.request(url + server_url + load, {
+    var param = '?type=stb&action=get_profile&hd=1'+ver_str+'&num_banks=2&sn=SN_'+mac_id+'&stb_type=MAG250&image_version=218&device_id=D1_'+mac_id+'&device_id2=D2_'+mac_id+'&signature=SG_'+mac_id+'&auth_second_step=0&hw_version=1.11-BD-00&not_valid_token=0&JsHttpRequest=1-xml';
+    var responseText = showtime.httpReq(url + load_url + param, {
             headers: {
 			    'User-Agent' : user_agent,
 			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Referer' : url + server_url + refer,
-			    'Accept' : '*/*',
-			    'Connection' : 'close',
-			    'X-User-Agent' : 'Model: MAG254; Link: Ethernet',
-                'Accept-Encoding': 'identity',
-                'Content-Length': postdata.length,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization' : 'Bearer ' + token,
+			    'Host': 'p4.iptvprivateserver.tv',
+			    'Connection' : 'Keep-Alive',
+			    'X-User-Agent' : 'MAG250; Link: Ethernet',
+			    'Authorization' : 'Bearer ' + token,
+			    'Accept-Language' : 'en,*',
             },
-            postdata: postdata
-
         }).toString();
     //print(responseText);
-    return JSON.parse(responseText);
+}
+
+function get_modules(token){
+    var param = '?type=stb&action=get_modules&JsHttpRequest=1-xml';
+    var responseText = showtime.httpReq(url + load_url + param, {
+            headers: {
+			    'User-Agent' : user_agent,
+			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
+			    'Host': 'p4.iptvprivateserver.tv',
+			    'Connection' : 'Keep-Alive',
+			    'X-User-Agent' : 'MAG250; Link: Ethernet',
+			    'Authorization' : 'Bearer ' + token,
+			    'Accept-Language' : 'en,*',
+            },
+        }).toString();
+    //print(responseText);
 }
 
 function get_genres(token){
-    var postdata = 'action=get_genres&type=itv&JsHttpRequest=1-xml';
-    var responseText = http.request(url + server_url + load, {
+    var param = '?type=itv&action=get_genres&JsHttpRequest=1-xml';
+    var responseText = showtime.httpReq(url + load_url + param, {
             headers: {
 			    'User-Agent' : user_agent,
 			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Referer' : url + server_url + refer,
-			    'Accept' : '*/*',
-			    'Connection' : 'close',
-			    'X-User-Agent' : 'Model: MAG254; Link: Ethernet',
-                'Accept-Encoding': 'identity',
-                'Content-Length': postdata.length,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization' : 'Bearer ' + token,
+			    'Host': 'p4.iptvprivateserver.tv',
+			    'Connection' : 'Keep-Alive',
+			    'X-User-Agent' : 'MAG250; Link: Ethernet',
+			    'Authorization' : 'Bearer ' + token,
+			    'Accept-Language' : 'en,*',
+			    'Referer' : "http://p4.iptvprivateserver.tv/c/index.html",
             },
-            postdata: postdata
 
         }).toString();
     //print(responseText);
@@ -146,67 +254,39 @@ function get_genres(token){
 }
 
 function get_all_channels(token){
-    var postdata = 'action=get_all_channels&type=itv&JsHttpRequest=1-xml';
-    var responseText = http.request(url + server_url + load, {
+    var param = '?action=get_all_channels&type=itv&JsHttpRequest=1-xml';
+    var responseText = showtime.httpReq(url + load_url + param, {
             headers: {
+			    'Authorization' : 'Bearer ' + token,
+			    'X-User-Agent' : 'Model: MAG254; Link: Ethernet',
 			    'User-Agent' : user_agent,
 			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Referer' : url + server_url + refer,
-			    'Accept' : '*/*',
-			    'Connection' : 'close',
-			    'X-User-Agent' : 'Model: MAG254; Link: Ethernet',
-                'Accept-Encoding': 'identity',
-                'Content-Length': postdata.length,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization' : 'Bearer ' + token,
+			    'Connection' : 'Keep-Alive',
+			    'Accept-Encoding': 'identity',
+			    'Accept-Language' : 'en,*',
+			    'Host': 'p4.iptvprivateserver.tv',
             },
-            postdata: postdata
-
         }).toString();
     //print(responseText);
     return JSON.parse(responseText).js.data;
 }
 
-function get_group_list(token){
-    var postdata = 'p=2&fav=0&genre=10&JsHttpRequest=1-xml&action=get_ordered_list&type=itv';
-    var responseText = http.request(url + server_url + load, {
-            headers: {
-			    'User-Agent' : user_agent,
-			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Referer' : url + server_url + refer,
-			    'Accept' : '*/*',
-			    'Connection' : 'close',
-			    'X-User-Agent' : 'Model: MAG254; Link: Ethernet',
-                'Accept-Encoding': 'identity',
-                'Content-Length': postdata.length,
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization' : 'Bearer ' + token,
-            },
-            postdata: postdata
-
-        }).toString();
-    return JSON.parse(responseText);
-}
-
 function creat_link(token,cmd){
-    var postdata = 'type=itv&action=create_link&cmd=' + cmd +'&series=&forced_storage=&disable_ad=0&JsHttpRequest=1-xml';
-    print(postdata);
-    var responseText = http.request(url + server_url + load, {
-            headers: {
-			    'User-Agent' : user_agent,
-			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Referer' : url + server_url + refer,
-			    'Accept' : '*/*',
-			    'Connection' : 'close',
-			    'X-User-Agent' : 'Model: MAG254; Link: Ethernet',
-                'Accept-Encoding': 'identity',
-                'Content-Length': postdata.length,
-                'Content-Type': 'application/x-www-form-urlencoded',
+    var uri = cmd.split(' ');
+    var param = '?type=itv&action=create_link&cmd='+cmd+'&series=&forced_storage=&disable_ad=0&JsHttpRequest=1-xml';
+    var responseText = showtime.httpReq(url + load_url + param, {
+        headers: {
+                'User-Agent' : user_agent,
+                'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
+                'Host': 'p4.iptvprivateserver.tv',
+                'Connection' : 'Keep-Alive',
+                'X-User-Agent' : 'MAG250; Link: Ethernet',
                 'Authorization' : 'Bearer ' + token,
+                'Accept-Language' : 'en,*',
+                'Referer' : "http://p4.iptvprivateserver.tv/c/index.html",
             },
-            postdata: postdata
-
         }).toString();
-    print(responseText);
+    //print(responseText);
     return JSON.parse(responseText).js.cmd;
 }
+
