@@ -265,7 +265,20 @@ function get_all_channels(token){
 
 function creat_link(token,cmd){
     var uri = cmd.split(' ');
-    var param = '?type=itv&action=create_link&cmd='+cmd+'&series=&forced_storage=&disable_ad=0&JsHttpRequest=1-xml';
+	len = uri.length;
+	if(len>1)
+	{
+		enc_cmd = uri[0];
+		for(var i=1; i<len; i++)
+		{
+			enc_cmd = enc_cmd + '%20' + uri[i];
+		}
+	}
+	else
+	{
+		enc_cmd = cmd;
+	}
+    var param = '?type=itv&action=create_link&cmd='+enc_cmd+'&series=&forced_storage=&disable_ad=0&JsHttpRequest=1-xml';
     var responseText = showtime.httpReq(url + load_url + param, {
         headers: {
                 'User-Agent' : user_agent,
