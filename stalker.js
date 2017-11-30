@@ -72,32 +72,24 @@ var server_type = 0;
         }
 
         function loader() {
-            j = 0;
-        for(var i in global_responseData)
-        {
-            if(global_responseData[i].tv_genre_id == id || alias.toLowerCase() == 'all')
+            for(var i in global_responseData)
             {
-                j++;
-                if(j <= offset)
-                    continue;
-                if(j > offset +50)
-                    break;
-				if(global_responseData[i].logo)
-				{
-					if(global_responseData[i].logo.substring(0,4) == "http")
-						icon_url = global_responseData[i].logo;
-					else
-						icon_url = url + '/stalker_portal/misc/logos/320/' + global_responseData[i].logo;
-				}
-				else
-				{
-					icon_url = '';
-				}
-                page.appendItem(PLUGIN_PREFIX + 'playcmd:' + global_responseData[i].cmd, 'video',{title: global_responseData[i].name, icon: icon_url,extra_data:"total:"+total});
+                if(global_responseData[i].tv_genre_id == id || alias.toLowerCase() == 'all')
+                {
+				    if(global_responseData[i].logo)
+				    {
+					    if(global_responseData[i].logo.substring(0,4) == "http")
+						    icon_url = global_responseData[i].logo;
+					    else
+						    icon_url = url + '/stalker_portal/misc/logos/320/' + global_responseData[i].logo;
+				    }
+				    else
+				    {
+					    icon_url = '';
+				    }
+                    page.appendItem(PLUGIN_PREFIX + 'playcmd:' + global_responseData[i].cmd, 'video',{title: global_responseData[i].name, icon: icon_url,extra_data:"total:"+total});
+                }
             }
-        }
-        offset +=50;
-        print("offset:"+offset+"page.entries:"+page.entries);
         }
         loader();
         page.paginator = loader;
@@ -273,7 +265,20 @@ function get_all_channels(token){
 
 function creat_link(token,cmd){
     var uri = cmd.split(' ');
-    var param = '?type=itv&action=create_link&cmd='+cmd+'&series=&forced_storage=&disable_ad=0&JsHttpRequest=1-xml';
+	len = uri.length;
+	if(len>1)
+	{
+		enc_cmd = uri[0];
+		for(var i=1; i<len; i++)
+		{
+			enc_cmd = enc_cmd + '%20' + uri[i];
+		}
+	}
+	else
+	{
+		enc_cmd = cmd;
+	}
+    var param = '?type=itv&action=create_link&cmd='+enc_cmd+'&series=&forced_storage=&disable_ad=0&JsHttpRequest=1-xml';
     var responseText = showtime.httpReq(url + load_url + param, {
         headers: {
                 'User-Agent' : user_agent,
