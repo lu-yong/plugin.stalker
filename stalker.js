@@ -45,7 +45,7 @@ var server_type = 0;
         responseData = responseData.js;
         for(var i in responseData)
         {
-            page.appendItem(PLUGIN_PREFIX + 'id:' + responseData[i].id + ':alias:' + responseData[i].alias, 'directory',{title: responseData[i].title,extra_data:"hello, i`am extra data" });
+            page.appendItem(PLUGIN_PREFIX + 'id:' + responseData[i].id + ':alias:' + responseData[i].alias, 'directory',{title: responseData[i].title,});
         }
         global_get_ok = 0;
         page.loading = false;
@@ -92,8 +92,6 @@ var server_type = 0;
             }
         }
         loader();
-        page.paginator = loader;
-
     });
 
     plugin.addURI(PLUGIN_PREFIX+"playcmd:(.*)", function(page, cmd) {
@@ -137,7 +135,6 @@ function handshake1(){
 			        'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
 			        'Connection' : 'Keep-Alive',
 			        'X-User-Agent' : 'MAG250; Link: Ethernet',
-			        'Host': 'p4.iptvprivateserver.tv',
                 },
             }).toString();
         if(responseText.length>10)
@@ -163,7 +160,6 @@ function handshake2(){
 			        'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
 			        'Connection' : 'Keep-Alive',
 			        'X-User-Agent' : 'MAG250; Link: Ethernet',
-			        'Host': 'p4.iptvprivateserver.tv',
                 },
             }).toString();
         if(responseText.length>10)
@@ -200,7 +196,6 @@ function get_profile(token){
             headers: {
 			    'User-Agent' : user_agent,
 			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Host': 'p4.iptvprivateserver.tv',
 			    'Connection' : 'Keep-Alive',
 			    'X-User-Agent' : 'MAG250; Link: Ethernet',
 			    'Authorization' : 'Bearer ' + token,
@@ -216,7 +211,6 @@ function get_modules(token){
             headers: {
 			    'User-Agent' : user_agent,
 			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Host': 'p4.iptvprivateserver.tv',
 			    'Connection' : 'Keep-Alive',
 			    'X-User-Agent' : 'MAG250; Link: Ethernet',
 			    'Authorization' : 'Bearer ' + token,
@@ -232,12 +226,10 @@ function get_genres(token){
             headers: {
 			    'User-Agent' : user_agent,
 			    'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-			    'Host': 'p4.iptvprivateserver.tv',
 			    'Connection' : 'Keep-Alive',
 			    'X-User-Agent' : 'MAG250; Link: Ethernet',
 			    'Authorization' : 'Bearer ' + token,
 			    'Accept-Language' : 'en,*',
-			    'Referer' : "http://p4.iptvprivateserver.tv/c/index.html",
             },
 
         }).toString();
@@ -256,7 +248,6 @@ function get_all_channels(token){
 			    'Connection' : 'Keep-Alive',
 			    'Accept-Encoding': 'identity',
 			    'Accept-Language' : 'en,*',
-			    'Host': 'p4.iptvprivateserver.tv',
             },
         }).toString();
     //print(responseText);
@@ -283,12 +274,10 @@ function creat_link(token,cmd){
         headers: {
                 'User-Agent' : user_agent,
                 'Cookie' : 'mac=' + mac + '; stb_lang=en; timezone=' + timezone,
-                'Host': 'p4.iptvprivateserver.tv',
                 'Connection' : 'Keep-Alive',
                 'X-User-Agent' : 'MAG250; Link: Ethernet',
                 'Authorization' : 'Bearer ' + token,
                 'Accept-Language' : 'en,*',
-                'Referer' : "http://p4.iptvprivateserver.tv/c/index.html",
             },
         }).toString();
     //print(responseText);
