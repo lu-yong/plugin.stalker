@@ -14,7 +14,6 @@ var mac = '00:1A:79:f5:75:d2';
 var mac_id = '001A79f575d2';
 var token;
 var global_responseData;
-var global_get_ok;
 var server_type = 0;
 
 (function(plugin) {
@@ -43,25 +42,58 @@ var server_type = 0;
         token = handshake();
         responseData = get_genres(token);
         responseData = responseData.js;
+        if(typeof(showtime.apiVersion) != "undefined" && showtime.apiVersion == "1.0.0")
+        {
+            page.appendItem(PLUGIN_PREFIX + "search:", 'search', {title: 'Search'});
+        }
         for(var i in responseData)
         {
             page.appendItem(PLUGIN_PREFIX + 'id:' + responseData[i].id + ':alias:' + responseData[i].alias, 'directory',{title: responseData[i].title,});
         }
-        global_get_ok = 0;
+
+        global_responseData = get_all_channels(token);
         page.loading = false;
 
     });
+
+    plugin.addURI(PLUGIN_PREFIX + "search:(.*)", function(page, query) {
+        var result = 0;
+     	print('Search results for: ' + query);
+        // 去掉转义字符
+        query = query.replace(/[\'\"\\\/\b\f\n\r\t]/g, '');
+        // 去掉特殊字符
+        query = query.replace(/[\@\#\$\%\^\&\*\{\}\:\"\<\>\?]/g, '');
+     	print('2Search results for: ' + query);
+        for(var i in global_responseData)
+        {
+            if(global_responseData[i].name.search(eval('/' + query + "/i")) != -1)
+            {
+                if(global_responseData[i].logo)
+                {
+                    if(global_responseData[i].logo.substring(0,4) == "http")
+                        icon_url = global_responseData[i].logo;
+                    else
+                        icon_url = url + '/stalker_portal/misc/logos/320/' + global_responseData[i].logo;
+                }
+                else
+                {
+                    icon_url = '';
+                }
+                result = 1;
+                page.appendItem(PLUGIN_PREFIX + 'playcmd:' + global_responseData[i].cmd, 'video',{title: global_responseData[i].name, icon: icon_url});
+            }
+        }
+        if(result == 0)
+        {
+                page.appendItem(PLUGIN_PREFIX + 'playcmd:null', 'video',{title: "No Content"});
+        }
+	});
 
     plugin.addURI(PLUGIN_PREFIX+"id:(.*):alias:(.*)", function(page, id, alias) {
         var offset = 0;
         var j = 0;
         var total = 0;
         page.entries = 0;
-        if(global_get_ok == 0)
-        {
-            global_get_ok = 1;
-            global_responseData = get_all_channels(token);
-        }
 
         for(var i in global_responseData)
         {
@@ -91,13 +123,24 @@ var server_type = 0;
                 }
             }
         }
-        loader();
+        if(total == 0)
+        {
+            page.appendItem(PLUGIN_PREFIX + 'playcmd:null', 'video',{title: "No Content"});
+        }
+        else
+        {
+            loader();
+        }
+
+
     });
 
     plugin.addURI(PLUGIN_PREFIX+"playcmd:(.*)", function(page, cmd) {
         var url;
         print(cmd);
-        if(cmd.substring(0, 4) == "http")
+        if(cmd.substring(0, 4) == "null")
+            url = "null"
+        else if(cmd.substring(0, 4) == "http")
             url = cmd;
         else if(cmd.substring(0, 6) == "ffmpeg") //&& cmd.substring(7, 11) == "http")
         {
