@@ -62,7 +62,7 @@ var server_type = 0;
         // 去掉转义字符
         query = query.replace(/[\'\"\\\/\b\f\n\r\t]/g, '');
         // 去掉特殊字符
-        query = query.replace(/[\@\#\$\%\^\&\*\{\}\:\"\<\>\?]/g, '');
+        query = query.replace(/[\@\#\$\%\^\&\*\{\}\:\"\<\>\?\[\]\(\)]/g, '');
      	print('2Search results for: ' + query);
         for(var i in global_responseData)
         {
