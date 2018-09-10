@@ -100,7 +100,7 @@ var global_responseData;
                 total++;
             }
         }
-        print("total = " + total);
+        //print("total = " + total);
 
         function loader() {
             for(var i in global_responseData)
@@ -136,7 +136,7 @@ var global_responseData;
 
     plugin.addURI(PLUGIN_PREFIX+"playcmd:(.*)", function(page, cmd) {
         var url;
-        print(cmd);
+        //print(cmd);
         if(cmd.substring(0, 4) == "null")
             url = "null"
         else if(cmd.substring(0, 4) == "http")
@@ -172,7 +172,6 @@ function handshake1(){
     var param = '?type=stb&action=handshake&JsHttpRequest=1-xml';
 	stalker_dec_server_url();
 
-	//print("url:" + url+load_url+param);
 	try{
         var responseText = showtime.httpReq(url + load_url + param, {
                 headers: {
@@ -238,8 +237,8 @@ function stalker_dec_server_url(){
 		url = server_url;
 	}
 
-	print("server_url:"+url);
-	print("load_url:"+load_url);
+	//print("server_url:"+url);
+	//print("load_url:"+load_url);
 }
 
 function handshake(){
@@ -319,7 +318,6 @@ function get_all_channels(token){
 			    'Accept-Language' : 'en,*',
             },
         }).toString();
-    print("get_all_channels http request url: " + url + load_url + param);
     return JSON.parse(responseText).js.data;
 }
 
